@@ -61,7 +61,7 @@ def on_key_press(symbol, modifiers):
 def on_key_release(symbol, modifiers):
     playerV.onkeyrelease(symbol,modifiers) #Simplifies code. In player.py
     
-screenZoom = [1920,1080] ## May want to make this adjust with monitor for different aspect ratios. Currently only for 16:9 monitors.
+screenZoom = [1280,720] ## May want to make this adjust with monitor for different aspect ratios. Currently only for 16:9 monitors.
 #1280x720 is default
 def update(dt):
     #window.view = window.view.from_rotation(-playerBody.angle/8,pyglet.math.Vec3(0,0,1))

@@ -1,6 +1,6 @@
 from pyglet.window import key
 import pyglet
-class Player:
+class Player: #Not sure why I made this a class, but I don't feel like changing it now.
     def __init__(self, playerMass,playerMoment, playerSpeed, playerMaxSpeed, jump, left, right, down, canJump, jumpDir, lastJump, onGround, pauseButton):
         self.playerMass = playerMass
         self.playerMoment = playerMoment
