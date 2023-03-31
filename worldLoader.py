@@ -22,8 +22,19 @@ def fFine(haystack,needle,occ): # For extracting specific information from files
     return(-1)
 
 def load_world(space):
+    testBody = pymunk.Body(body_type=pymunk.Body.STATIC)
+    testBody.position = 640,400
+    testPolyP = [(0,0),(0,20),(20,20)]
+    testPoly = pymunk.Poly(testBody,testPolyP)
+    space.add(testBody,testPoly)
+
+
+
+
     #world = open('testmap.svg','r')
     worldStatic = []
+    worldStaticPoly=[]
+    worldStaticPolyPoints=[]
     #print(os.listdir('levels'))
     i=0
     for lvl in os.listdir('levels'):
@@ -57,7 +68,20 @@ def load_world(space):
                     doDraw=False
                 #print(doDraw)
                 worldStatic.append([xpos*(1280/1920),ypos*(720/1080),width*(1280/1920),height*(720/1080),wall,rotation,doDraw])
-
+            if(ln[fFine(ln,'p',1)-1:fFine(ln,'n',1)]=='polygon'):
+                pointstr=[]
+                run=True
+                i=0
+                pointstr.append(float(ln[fFine(ln,'"',1):fFine(ln,' ',4)-1]))
+                while run:
+                    if(fFine(ln,'"',2)) > fFine(ln,' ',5+i):
+                        pointstr.append(ln[fFine(ln,' ',4+i):fFine(ln,' ',5+i)-1])
+                    else:
+                        run=False
+                    i+=1
+                pointstr.append(ln[fFine(ln,' ',3+i):fFine(ln,'"',2)-1])
+                worldStaticPolyPoints.append(pointstr) #Polygons half implemented.
+                #print(worldStaticPolyPoints)
 
     statics = []
     polys = []
