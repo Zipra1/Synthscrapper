@@ -24,15 +24,19 @@ kinematicbodies=[]
 ###Spawning the world & player
 worldLoader.load_world(space) # Load the map in space
 
-playerV = player.Player(10,3000,20,200,False,False,False,False,False,pyglet.math.Vec2(0,0),0,False,False) # Mass, Moment, Speed, Key,Key,Key,Key,CanJump,JumpDir,onGround
+playerV = player.Player(10,3000,20,150,False,False,False,False,False,False,pyglet.math.Vec2(0,0),0,False,False,False,pyglet.sprite.Sprite(img=pyglet.image.load_animation('Resources/catone.gif'))) # Mass, Moment, Speed, Key,Key,Key,Key,CanJump,JumpDir,onGround
 playerBody = pymunk.Body(playerV.playerMass,playerV.playerMoment,pymunk.Body.DYNAMIC)
 playerBody.position = 640, 700
-playerPoly = pymunk.Poly.create_box(playerBody, size=(30,30)) #Attach a box to the body
+playerPoly = pymunk.Poly.create_box(playerBody, size=(20,55)) #Attach a box to the body
 playerPoly.friction = 1
 #print(playerPoly.center_of_gravity)
 space.add(playerBody, playerPoly)
 ###End spawning the world
 
+
+def animUpdate(dt):
+    #playerV.animCheck(playerBody)
+    pass
 
 @window.event
 def on_draw(): # Called by pyglet every frame
@@ -41,16 +45,13 @@ def on_draw(): # Called by pyglet every frame
     for elem in menus.pauseScreen(window,playerBody):
         if(playerV.pauseButton==True):
             elem.draw()
+    #fps=(1/(time.time()-atime))
             
     # Player animations
+    sprite = playerV.sprite
+    sprite.position=(playerBody.position.x-sprite.width/2,playerBody.position.y-sprite.height/2,0)
+    sprite.draw()
 
-    image = pyglet.resource.image('sprite.png')
-    texture = image.get_texture()   ## Resizing image without blurring using OpenGL
-    pyglet.gl.glTexParameteri(pyglet.gl.GL_TEXTURE_2D, pyglet.gl.GL_TEXTURE_MAG_FILTER, pyglet.gl.GL_NEAREST)
-    texture.width = 30
-    texture.height = 90
-    playerSprite = pyglet.sprite.Sprite(texture,x=playerBody.position.x-15,y=playerBody.position.y-15)
-    playerSprite.draw()
         
 
 @window.event
@@ -65,17 +66,18 @@ screenZoom = [1280,720] ## May want to make this adjust with monitor for differe
 #1280x720 is default
 def update(dt):
     #window.view = window.view.from_rotation(-playerBody.angle/8,pyglet.math.Vec3(0,0,1))
-    window.view = window.view.from_translation(pyglet.math.Vec3(-playerBody.position.x*(resolution[0]/screenZoom[0]) + window.width//2, -playerBody.position.y*(resolution[1]/screenZoom[1]) + window.height//2, 0)) # Change the camera position
+    #window.view = window.view.from_translation(pyglet.math.Vec3(-playerBody.position.x*(resolution[0]/screenZoom[0]) + window.width//2, -playerBody.position.y*(resolution[1]/screenZoom[1]) + window.height//2, 0)) # Change the camera position
+    window.view = window.view.from_translation(pyglet.math.Vec3((playerBody.position.x//1280)*(-1280),-(playerBody.position.y//720)*(720),0))
     window.view = window.view.scale(pyglet.math.Vec3(resolution[0]/screenZoom[0],resolution[1]/screenZoom[1],1))
-
+    #print(playerBody.position.x//1280,'|',playerBody.position.y//720)
     
 
 def limit_velocity(body,gravity,damping,dt): #Pymunk velocity function magic?
-    max_velocity = 600-((600-playerV.playerMaxSpeed)*playerV.onGround)
+    maxVelocity = 600-((600-playerV.playerMaxSpeed)*playerV.onGround)
     pymunk.Body.update_velocity(body,gravity,damping,dt)
     scalarVel = body.velocity.length # Get the scalar quantity of the velocity
-    if scalarVel > max_velocity: # Harsh dampen speed if over max velocity
-        scale = max_velocity / scalarVel
+    if scalarVel > maxVelocity: # Harsh dampen speed if over max velocity
+        scale = maxVelocity / scalarVel
         body.velocity = body.velocity * scale
     body.velcoity = body.velocity * 0.98 # Constant slight dampen
 
@@ -89,15 +91,29 @@ def coll_pre(arbiter, space, data): # Pre collision calculation
 
 def coll_post(arbiter, space, data): # Post collision calculation
     if({arbiter.shapes[0]} == playerBody.shapes or {arbiter.shapes[1]} == playerBody.shapes):
-        playerV.jumpDir = pyglet.math.Vec2(arbiter.normal.x,arbiter.normal.y+1) # Set jump direction to the normal of the last collided body, with additional y force.
+        worldBody = int(not {arbiter.shapes[1]} == playerBody.shapes)
+        playerV.jumpDir = pyglet.math.Vec2(arbiter.normal.x,arbiter.normal.y+0.7) # Set jump direction to the normal of the last collided body, with additional y force.
         playerV.onGround = True
         if(playerV.lastJump+0.1 < time.time()): # Stops instantaneous double jumps
             playerV.canJump=True
+        if(arbiter.shapes[worldBody].friction == 8.4):
+                if(playerV.up):
+                    playerBody.velocity = playerBody.velocity + pyglet.math.Vec2(0,43*(playerV.left+playerV.right))
+                    playerV.playerMaxSpeed = 40
+                else:
+                    playerV.playerMaxSpeed = 150
+                if(playerV.down):
+                    playerBody.velocity = playerBody.velocity + pyglet.math.Vec2(0,-15*(playerV.left+playerV.right))
+                    playerV.playerMaxSpeed = 150
+
+                
         
 def coll_separate(arbiter, space, data): # When collission separates
     if({arbiter.shapes[0]} == playerBody.shapes or {arbiter.shapes[1]} == playerBody.shapes):
         playerV.canJump=False
         playerV.onGround=False
+        playerV.playerMaxSpeed = 200
+
 
 handler = space.add_default_collision_handler() # Collision handler, to check when objects are colliding.
 handler.begin = coll_begin
@@ -116,15 +132,13 @@ def physupdate(dt): ### Updating physics
     rotLock = pymunk.RotaryLimitJoint(playerBody,rotLockBody,0,0)
     space.add(rotLock)
     if(playerV.canJump and playerV.jump):
-        playerBody.velocity = playerBody.velocity + pyglet.math.Vec2(playerV.jumpDir.x*250,200*playerV.jumpDir.y)
+        playerBody.velocity = playerBody.velocity + pyglet.math.Vec2(playerV.jumpDir.x*350,200*playerV.jumpDir.y)
         playerV.canJump = False
         playerV.lastJump = time.time()
     if(playerV.pauseButton==False):
         playerBody.velocity = playerBody.velocity + pyglet.math.Vec2(-playerV.playerSpeed*playerV.left,0)
         playerBody.velocity = playerBody.velocity + pyglet.math.Vec2(playerV.playerSpeed*playerV.right,0)
         playerBody.velocity_func = limit_velocity
-    #playerPoly.friction = pow(1.002,playerBody.velocity.length)/3
-    #print(playerBody.velocity[0])
     # Soft cap movement speed
     playerPoly.friction = 4
     if(playerV.left==True):
@@ -143,4 +157,5 @@ def physupdate(dt): ### Updating physics
 if __name__ == "__main__":
     pyglet.clock.schedule_interval(update, 1/60) # Call function "update" every 1/60th of a second (60fps)
     pyglet.clock.schedule_interval(physupdate,1/60) # Update physics at 60FPS. This value will never change.
+    pyglet.clock.schedule_interval(animUpdate,1/1)
     pyglet.app.run()

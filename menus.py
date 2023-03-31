@@ -5,7 +5,7 @@ def pauseScreen(window,player):
     label = pyglet.text.Label('Quit game',
                           font_name='Arial',
                           font_size=36,
-                          x=player.position.x-(1920/2)+300, y=player.position.y+(1080/2)-36,
+                          x=player.position.x-(window.width/2)+300, y=player.position.y+(window.height/2)-36,
                           anchor_x='center', anchor_y='center')
     output.append(label)
     return output
