@@ -9,4 +9,4 @@ Reason: Contains everything that tutorials didn't, but is sometimes vague in how
 
 Article: Pyglet Documentation
 Source: https://pyglet.readthedocs.io/en/latest/
-Reason: To learn how to use pyglet efficiently.
+Reason: To learn how to use pyglet

@@ -21,7 +21,10 @@ def fFine(haystack,needle,occ): # For extracting specific information from files
             return indx
     return(-1)
 
-def load_world(space):
+def load_world(space,window):
+    wallImage = pyglet.image.load('Sprites/textures/testWall2.bmp')
+    wallTexture = pyglet.image.TileableTexture(50,50,'Sprites/textures/testWall2.bmp',0)
+
     testBody = pymunk.Body(body_type=pymunk.Body.STATIC)
     testBody.position = 640,400
     testPolyP = [(0,0),(0,20),(20,20)]
@@ -55,8 +58,10 @@ def load_world(space):
                     rotation = float(ln[fFine(ln,'(',2):fFine(ln,')',2)-1])*-0.0174533
                 else:rotation = 0
                 #print(lvl[2:3])
-                xpos = (float(xpos)+width/2) + (int(lvl[0:1])*1920)
-                ypos = (-float(ypos)-height/2) + (int(lvl[2:3])*1080)
+                worldOffsetx=(int(lvl[0:1])*1920)
+                worldOffsety=(int(lvl[2:3])*1080)
+                xpos = (float(xpos)+width/2) + worldOffsetx
+                ypos = (-float(ypos)-height/2) + worldOffsety
 
                 colour = ln[fFine(ln,'#',1):fFine(ln,';',1)-1]
                 
@@ -85,6 +90,7 @@ def load_world(space):
 
     statics = []
     polys = []
+    image = []
     for i in range(len(worldStatic)):
         statics.append(pymunk.Body(body_type=pymunk.Body.STATIC))
         statics[i].position = worldStatic[i][0],worldStatic[i][1]
@@ -93,3 +99,6 @@ def load_world(space):
         polys[i].friction = (worldStatic[i][4]*8)+0.4
         if(worldStatic[i][6]==True):
             space.add(statics[i],polys[i])
+            wallTexture = wallImage.get_texture()
+            image.append([wallTexture,worldStatic[i][0],worldStatic[i][1],worldStatic[i][2],worldStatic[i][3]])
+    return image
