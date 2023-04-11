@@ -3,6 +3,9 @@ import pyglet
 # TO ADD:
 # S to crouch / slide
 class Player: 
+    '''This class represents the player.
+        wantUp: True if the player is stuck under an object crouching and wants to stand up.
+    '''
     def __init__(self, playerMass,playerMoment, playerSpeed, playerMaxSpeed, jump, left, right, down, up, canJump, jumpDir, lastJump, onGround, onWall, pauseButton, sprite, inWall, wantUp):
         self.playerMass = playerMass
         self.playerMoment = playerMoment

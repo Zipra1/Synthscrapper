@@ -22,18 +22,19 @@ def fFine(haystack,needle,occ): # For extracting specific information from files
     return(-1)
 
 def load_world(space,window):
+
+    '''
     wallImage = pyglet.image.load('Sprites/textures/testWall2.bmp')
     wallTexture = pyglet.image.TileableTexture(50,50,'Sprites/textures/testWall2.bmp',0)
 
-    testBody = pymunk.Body(body_type=pymunk.Body.STATIC)
+    testBody = pymunk.Body(50, 1500, pymunk.Body.DYNAMIC) ## This is just to test the effects of spears on dynamic bodies while I work on implementing dynamics to the world editor.
     testBody.position = 640,400
-    testPolyP = [(0,0),(0,20),(20,20)]
-    testPoly = pymunk.Poly(testBody,testPolyP)
+    #testPolyP = [(0,0),(0,20),(20,20)]
+    testPoly = pymunk.Poly.create_box(testBody,(20,20))
+    testPoly.friction = 0.4
+    #testPoly = pymunk.Poly(testBody,testPolyP)
     space.add(testBody,testPoly)
-
-
-
-
+    '''
     #world = open('testmap.svg','r')
     worldStatic = []
     worldStaticPoly=[]
@@ -67,12 +68,15 @@ def load_world(space,window):
                 
                 wall=False
                 doDraw=True
+                dynamic=False
                 if(colour == '636466'): # Wall check
                     wall=True
                 elif(colour == 'fff'):
                     doDraw=False
+                elif(colour == '00aeef'):
+                    dynamic=True
                 #print(doDraw)
-                worldStatic.append([xpos*(1280/1920),ypos*(720/1080),width*(1280/1920),height*(720/1080),wall,rotation,doDraw])
+                worldStatic.append([xpos*(1280/1920),ypos*(720/1080),width*(1280/1920),height*(720/1080),wall,rotation,doDraw,dynamic])
             if(ln[fFine(ln,'p',1)-1:fFine(ln,'n',1)]=='polygon'):
                 pointstr=[]
                 run=True
@@ -92,13 +96,16 @@ def load_world(space,window):
     polys = []
     image = []
     for i in range(len(worldStatic)):
-        statics.append(pymunk.Body(body_type=pymunk.Body.STATIC))
+        if(worldStatic[i][7]==False):
+            statics.append(pymunk.Body(body_type=pymunk.Body.STATIC))
+        else:
+            statics.append(pymunk.Body((worldStatic[i][2]*worldStatic[i][3])//100, (worldStatic[i][2]*worldStatic[i][3])*2, pymunk.Body.DYNAMIC))
         statics[i].position = worldStatic[i][0],worldStatic[i][1]
         statics[i].angle = worldStatic[i][5]
         polys.append(pymunk.Poly.create_box(statics[i],size=(worldStatic[i][2],worldStatic[i][3])))
         polys[i].friction = (worldStatic[i][4]*8)+0.4
         if(worldStatic[i][6]==True):
             space.add(statics[i],polys[i])
-            wallTexture = wallImage.get_texture()
-            image.append([wallTexture,worldStatic[i][0],worldStatic[i][1],worldStatic[i][2],worldStatic[i][3]])
-    return image
+            #wallTexture = wallImage.get_texture()
+            #image.append([wallTexture,worldStatic[i][0],worldStatic[i][1],worldStatic[i][2],worldStatic[i][3]])
+    #return image
