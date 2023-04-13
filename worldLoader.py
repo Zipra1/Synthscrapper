@@ -4,8 +4,11 @@
 # SELECT: Inline Style, SVG, Preserve, Layer Names, 2 Decimals
 
 # Current formatting rules for map:
-# [> All rectangles are solid
-# [> Temporary rule: Tall rectangles are climable, flat ones are walkable.
+# [> Key rectangles are static
+#   [> #636466 means climbable
+# [> #00aeef (cyan) rectangles are dynamic
+# [> #fff (no fill) means do not load
+# [> 
 import pymunk
 import pyglet
 import os

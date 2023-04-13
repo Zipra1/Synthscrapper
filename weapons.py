@@ -5,11 +5,13 @@ class Spear: # Tracking spear. Most complicated weapon (tool?) in the game. What
     def __init__(self,space,damage):
         self.space = space
         self.damage = damage
-        self.spears = [] # Don't remove this. It breaks the game. Its like the coconut in tf2. (fix this later lol)
+        self.spears = []
+        self.spearsPoly = []
         self.stuckSpears = []
         self.stuckSpearsShapes = []
+        self.stuckSpearsPoly = []
         self.canThrow = True
-        self.numSpears = 7 # The number of spears the player currently has
+        self.numSpears = 2 # The number of spears the player currently has
 
     #def createSpear(self,x,y,holdBody): ## Dont create spear, just spawn when you throw it and display it purely visually when on the player.
         
@@ -24,6 +26,7 @@ class Spear: # Tracking spear. Most complicated weapon (tool?) in the game. What
                 self.space.add(self.spearBody,self.spearPoly)
                 self.spearBody.velocity = self.spearBody.velocity + pyglet.math.Vec2(power*angx,power*angy) + playerBody.velocity/2
                 self.spears.append(self.spearBody.shapes)
+                self.spearsPoly.append(self.spearPoly)
                 self.numSpears -=1
 
     def stickSpear(self,spear,worldBody,jposition):
@@ -34,15 +37,18 @@ class Spear: # Tracking spear. Most complicated weapon (tool?) in the game. What
         self.space.add(jpivot)
         self.space.add(jgear)
         #self.spearBodiesFlying.remove(self.spearBody)
-        self.spears.remove(self.spearBody.shapes)
+        self.spearsPoly = []
+        self.spears=[]
         self.stuckSpears.append(self.spearBody)
+        self.stuckSpearsPoly.append(self.spearPoly)
         self.stuckSpearsShapes.append(self.spearBody.shapes)
 
-    def grabSpear(self,spear,poly):
+    def grabSpear(self,spear,poly,constraints):
         self.numSpears+=1
-        print(f'grabbed spear{spear.shapes}')
-        print(spear,poly)
         self.space.remove(spear,poly)
+        for joint in constraints: # Remove all joints attatched to the spear, leaving them behind might cause performance issues after playing for a while
+            self.space.remove(joint)
         self.stuckSpears.remove(spear)
-        #self.stuckSpears.remove(spear)
+        self.stuckSpearsPoly.remove(poly)
+        self.stuckSpearsShapes.remove(spear.shapes)
         pass

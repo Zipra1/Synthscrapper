@@ -8,7 +8,9 @@ import menus
 import math
 import weapons
 import time
+import enemies
 from pymunk.pyglet_util import DrawOptions
+
 #   Pymunk objects note:
 # Kinematic objects are controlled by code
 # Dyanmic objects are physics controlled (Physics objects)
@@ -17,10 +19,9 @@ from pymunk.pyglet_util import DrawOptions
 #IDEA: Draw your own map as you go through spaces instead of the game automatically updating it for you. I think this could add a lot to the game. Maybe stickers to customize your map?
 # I think that would just be a really fun idea to implement. Also might be easier than an automatically updating minimap.
 
-# Tracking spear can have the tip break off inside enemy, simplifies code and enemy behaviour. but removes a layer of depth (enemies being able to pull them out)
 screens = pyglet.canvas.Display.get_screens
-resolution = [1280,720]
-window = pyglet.window.Window(resolution[0],resolution[1],"Pymunk Test",fullscreen=False)
+resolution = [1920,1080]
+window = pyglet.window.Window(resolution[0],resolution[1],"Pymunk Test",fullscreen=True)
 pyglet.gl.glClearColor(0.2,0.2,0.2,1)
 options = DrawOptions()
 
@@ -52,6 +53,8 @@ psscreen = menus.pauseScreen(window,playerBody)
 wallImage = pyglet.image.load('Sprites/textures/testWall2.bmp')
 wallTile = pyglet.image.TileableTexture.create_for_image(wallImage)
 
+enemyList = []
+enemyList.append(enemies.Ecenti(space, 20, 300, 300, 1, 0, [3,0], 0, 0.5, []))
 
 spearTest = weapons.Spear(space, 20)
 #spearTest.createSpear(playerBody.position.x-20,playerBody.position.y+5,playerBody)
@@ -66,7 +69,7 @@ def on_draw(): # Called by pyglet every frame
         for elem in psscreen:
                 elem.draw()
 
-        ''' # probably don't need this. just draw the map over top the physics bodies, it'll look nicer.
+        ''' # probably don't need this. just draw the map over top the physics bodies, it'll look nicer. and probably run better.
     for textparam in worldTextures: #Embed textures into map file
         wallTile.blit_tiled(x=textparam[1]-(textparam[3]/2), y=textparam[2]-(textparam[4]/2), z=0, width=textparam[3], height=textparam[4])
     '''
@@ -81,8 +84,19 @@ def on_draw(): # Called by pyglet every frame
 @window.event
 def on_key_press(symbol, modifiers):
     playerV.onkeypress(symbol,modifiers)
-    grabbed=False
     if(symbol==pyglet.window.key.E): # Throwing and grabbing spears with the same key
+        i=-1
+        throw = True
+        for spear in spearTest.stuckSpears: ## Check if a spear is within grabbing distance
+            i+=1
+            x1 = playerBody.position.x
+            x2 = spear.position.x
+            y1 = playerBody.position.y
+            y2 = spear.position.y
+            if(math.dist([x1,y1],[x2,y2]) < 40):
+                throw=False
+                spearTest.grabSpear(spear,spearTest.stuckSpearsPoly[i],spear.constraints)
+        if(throw):
             spearTest.throwSpear(playerBody.position.x,playerBody.position.y,-playerV.lleft + playerV.lright,randrange(0,20)/400,1300,playerBody)
 
 @window.event 
@@ -114,10 +128,10 @@ def update(dt):
         playerV.playerSpeed = -sorted((0, pow(1.015,playerBody.velocity[0]*1.2+(playerV.down*100)), 30))[1]+30
         playerPoly.friction = 0.1
     
-    fps=((time.time()-atime))
-    if(fps>0.016666667):
-        ('FT<60FPS!:', fps)
-    #print(playerBody.position.x//1280,'|',playerBody.position.y//720)
+    #fps=((time.time()-atime))
+    #if(fps>0.016666667):
+    #    ('FT<60FPS!:', fps)
+    #print(playerBody.position.x//1280,'|',playerBody.position.y//720) # Print map location
     
     
 
@@ -128,7 +142,7 @@ def limit_velocity(body,gravity,damping,dt): #Pymunk velocity function magic?
     if scalarVel > maxVelocity: # Harsh dampen speed if over max velocity
         scale = maxVelocity / scalarVel
         body.velocity = body.velocity * scale
-    body.velcoity = body.velocity * 0.98 # Constant slight dampen
+    body.velocity = body.velocity * 0.98 # Constant slight dampen. Does this even actually do anything?
 
 def coll_begin(arbiter, space, data): # Start collision calculator (All collision functions are pymunk magic)
     if({arbiter.shapes[0]} == playerHeadBody.shapes or {arbiter.shapes[1]} == playerHeadBody.shapes): #If coll is with player head
@@ -141,12 +155,9 @@ def coll_begin(arbiter, space, data): # Start collision calculator (All collisio
         spearBody = int({arbiter.shapes[1]} in spearTest.spears)
         if(not {arbiter.shapes[0]} == playerBody.shapes and not {arbiter.shapes[1]} == playerBody.shapes):
             spearTest.stickSpear(arbiter.shapes[spearBody].body,arbiter.shapes[worldBody].body,arbiter.contact_point_set.points[0].point_a)
-    #print(spearTest.stuckSpearsShapes)
     return True # continue collision
 
 def coll_pre(arbiter, space, data): # Pre collision calculation
-    #if({arbiter.shapes[0]} == playerBody.shapes or {arbiter.shapes[1]} == playerBody.shapes):
-    #    arbiter.surface_velocity = 400,0'
     if({arbiter.shapes[0]} == playerHeadBody.shapes or {arbiter.shapes[1]} == playerHeadBody.shapes): # if PLAYER HEAD
         if(playerV.down):
             playerV.inWall=True
@@ -165,8 +176,8 @@ def coll_post(arbiter, space, data): # Post collision calculation
         playerV.jumpDir = pyglet.math.Vec2(arbiter.normal.x,abs(arbiter.normal.y)+0.7) # Set jump direction to the normal of the last collided body, with additional y force.
         playerV.onGround = True
         playerV.onWall = False
-        if(playerV.lastJump+0.1 < time.time()): # Stops instantaneous double jumps
-            playerV.canJump=True
+        if(playerV.lastJump+0.3 < time.time()): # Stops instantaneous double jumps
+                playerV.canJump=True
         if(arbiter.shapes[worldBody].friction == 8.4):
                 playerV.onWall=True
                 if(playerV.up):
@@ -187,6 +198,7 @@ def coll_separate(arbiter, space, data): # When collission separates
         playerV.playerMaxSpeed = 200
     if({arbiter.shapes[0]} == playerHeadBody.shapes or {arbiter.shapes[1]} == playerHeadBody.shapes): # If head separates
         playerV.inWall=False
+        playerV.onGround=False
 
 def slowUpdate(dt):
     playerV.animCheck()
@@ -194,22 +206,9 @@ def slowUpdate(dt):
         playerV.down = False
 
 def slowerUpdate(dt):
-    """
-    i=-1
-    for spear in spearTest.stuckSpears: ## Check if a spear is within grabbing distance
-        i+=1
-        x1 = playerBody.position.x
-        x2 = spear.position.x
-        y1 = playerBody.position.y
-        y2 = spear.position.y
-        if(math.dist([x1,y1],[x2,y2]) < 35):
-            spearTest.stuckSpearsInfo[i][2] = True
-        else:
-            spearTest.stuckSpearsInfo[i][2] = False
-        print(spearTest.stuckSpearsInfo[i][2])
-    print(spearTest.canThrow)
-"""
-    pass
+    for hostile in enemyList:
+        hostile.infoUpdate()
+
 handler = space.add_default_collision_handler() # Collision handler, to check when objects are colliding.
 handler.begin = coll_begin
 handler.pre_solve = coll_pre
