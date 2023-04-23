@@ -10,8 +10,16 @@ class Spear: # Tracking spear. Most complicated weapon (tool?) in the game. What
         self.stuckSpears = []
         self.stuckSpearsShapes = []
         self.stuckSpearsPoly = []
+        self.total = []
         self.canThrow = True
-        self.numSpears = 2 # The number of spears the player currently has
+        self.numSpears = 7 # The number of spears the player currently has
+        spearImg = pyglet.image.load_animation('Sprites/projectiles/tracker/trackingspear.gif')
+        for frame in spearImg.frames:
+            frame.image.anchor_x = frame.image.width//2
+            frame.image.anchor_y = frame.image.height//2
+        self.sprite = pyglet.sprite.Sprite(spearImg)
+        self.sprite.x = 20
+        self.sprite.y = 5
 
     #def createSpear(self,x,y,holdBody): ## Dont create spear, just spawn when you throw it and display it purely visually when on the player.
         
@@ -19,14 +27,17 @@ class Spear: # Tracking spear. Most complicated weapon (tool?) in the game. What
         if(self.canThrow):
             if(self.numSpears > 0):
                 #self.hitbox = pymunk.Poly.create_box(self.spearBody,(2,15))
-                self.spearBody = pymunk.Body(3,3000,pymunk.Body.DYNAMIC)
+                self.spearBody = pymunk.Body(3,3000,pymunk.Body.DYNAMIC) # Second spear type: INCAPACITATOR: Extremely high weight, weighs down enemies. Very strong knockback.
                 self.spearBody.position = x,y
                 self.spearPoly = pymunk.Poly.create_box(self.spearBody,(55,3))
                 self.spearPoly.friction = 0.4
                 self.space.add(self.spearBody,self.spearPoly)
                 self.spearBody.velocity = self.spearBody.velocity + pyglet.math.Vec2(power*angx,power*angy) + playerBody.velocity/2
+                if(angx > 0):
+                    self.spearBody.angle = 3.14159
                 self.spears.append(self.spearBody.shapes)
                 self.spearsPoly.append(self.spearPoly)
+                self.total.append([self.spearBody,self.sprite])
                 self.numSpears -=1
 
     def stickSpear(self,spear,worldBody,jposition):
@@ -51,4 +62,4 @@ class Spear: # Tracking spear. Most complicated weapon (tool?) in the game. What
         self.stuckSpears.remove(spear)
         self.stuckSpearsPoly.remove(poly)
         self.stuckSpearsShapes.remove(spear.shapes)
-        pass
+        self.total.remove([spear,self.sprite])

@@ -87,17 +87,7 @@ class Player:
             if(self.onWall):
                 self.animCheck()
     def animCheck(self): ## DO NOT Make the sprite in this! pyglet.sprite.Sprite creates a NEW sprite. Make any sprites in __init__
-        if(self.left and self.onGround and not self.right and not self.onWall): # LEFT
-            if(self.down): # CROUCH
-                self.sprite = self.animCrouchLeft
-            else: # NOCROUCH
-                self.sprite = self.animLeft
-        elif(self.right and self.onGround and not self.left and not self.onWall): # RIGHT
-            if(self.down): # CROUCH
-                self.sprite = self.animCrouchRight
-            else: # NOCROUCH
-                self.sprite = self.animRight
-        elif(self.right and not self.left and self.onWall): # RIGHT WALL
+        if(self.right and not self.left and self.onWall): # RIGHT WALL
             if(self.up and not self.down): # CLIMB
                 self.sprite = self.animClimbRight
             else:
@@ -107,6 +97,16 @@ class Player:
                 self.sprite = self.animClimbLeft
             else:
                 self.sprite = self.animWallLeft
+        elif(self.left and self.onGround and not self.right and not self.onWall): # LEFT
+            if(self.down): # CROUCH
+                self.sprite = self.animCrouchLeft
+            else: # NOCROUCH
+                self.sprite = self.animLeft
+        elif(self.right and self.onGround and not self.left and not self.onWall): # RIGHT
+            if(self.down): # CROUCH
+                self.sprite = self.animCrouchRight
+            else: # NOCROUCH
+                self.sprite = self.animRight
         else: # IDLE
             if(self.lleft == True):
                 if(self.down):

@@ -1,5 +1,5 @@
 #######        SVG World Loader        #######
-# Every map must have an invisible 1920x1080 box to define the width and height of the level.
+# Every map must have an invisible 1920x1080 box to define the width and height of the level
 # Adoble Illustrator > File > Export > Export As
 # SELECT: Inline Style, SVG, Preserve, Layer Names, 2 Decimals
 
@@ -112,3 +112,10 @@ def load_world(space,window):
             #wallTexture = wallImage.get_texture()
             #image.append([wallTexture,worldStatic[i][0],worldStatic[i][1],worldStatic[i][2],worldStatic[i][3]])
     #return image
+    worldTextures = []
+    #for lvl in os.listdir('levels'):
+        #worldTextures.append(pyglet.resource.image('levelsart/'+lvl))
+    background = pyglet.resource.image('levelsart/background/0,0.png')
+    foreground = pyglet.resource.image('levelsart/foreground/0,0.png')
+    worldTextures.append([background,foreground,0,0])
+    return worldTextures 

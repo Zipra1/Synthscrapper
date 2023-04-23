@@ -1,4 +1,5 @@
 import pymunk
+import pyglet
 
 class Enemy:
     '''
@@ -57,7 +58,7 @@ class Enemy:
         self.goal = goal
         self.adrenaline = adrenaline
         self.politics = politics
-        self.relationship = []
+        self.relationship = [] # Should probably use ad ictionary for this. ENTITY:RELATIONSHIPVALUE
         self.inventory = inventory
 
         self.head = pymunk.Body(50, 1500, pymunk.Body.DYNAMIC) #Create the head/center of the enemy.
@@ -71,13 +72,12 @@ class Enemy:
     def infoUpdate(self): # Global communications.
         pass
 
-def zero_gravity(body, damping, dt): # Velocity function to remove gravity from an object
+def zero_gravity(body, gravity, damping, dt): # Velocity function to remove gravity from an object
         pymunk.Body.update_velocity(body, (0,0), damping, dt)
 
-def zero_gravity_dampen(body, damping, dt): # Velocity function to remove gravity from an object
+def zero_gravity_dampen(body, gravity, damping, dt): # Velocity function to remove gravity from an object
         #pymunk.Body.update_velocity(body, (0,0), damping, dt)
-        body.velocity = body.velocity*0.1
-        pass
+        body.velocity = body.velocity*0.85
 
 class Ecenti(Enemy):
     def __init__(self, space, health, posx, posy, anger, fear, goal, adrenaline, politics, inventory):
@@ -85,12 +85,21 @@ class Ecenti(Enemy):
         self.head.velocity_func = zero_gravity
 
         prevSegment = self.head
+        segmentImg = pyglet.image.load('Sprites/creatures/ecenti/segment.png')
+        segmentImg.anchor_x = segmentImg.width//2
+        segmentImg.anchor_y = segmentImg.height//2
+        headImg = pyglet.image.load('Sprites/creatures/ecenti/head.png')
+        headImg.anchor_x = 12
+        headImg.anchor_y = headImg.height//2
+        self.segmentSprite = pyglet.sprite.Sprite(segmentImg)
+        self.headSprite = pyglet.sprite.Sprite(headImg)
+        self.segments = []
 
         for i in range(12): # Creating segments
              segment = pymunk.Body(5,1500,pymunk.Body.DYNAMIC)
              segment.position = posx+(25*i)+25,posy
              segmentPoly = pymunk.Circle(segment,12.5)
-             segmentPoly.friction = 3
+             segmentPoly.friction = 0
              space.add(segment,segmentPoly)
              segment.velocity_func = zero_gravity_dampen
              jpivot = pymunk.PivotJoint(segment, prevSegment, (posx+(25*i)+25,posy))
@@ -98,8 +107,10 @@ class Ecenti(Enemy):
              space.add(jrotlim)
              space.add(jpivot)
              prevSegment = segment
+             self.segments.append(segment)
     
-    def act(playerBody):
-         pass
-        
+    def act(self,playerBody):
+         self.head.velocity = self.head.velocity + pyglet.math.Vec2((playerBody.position.x-self.head.position.x)*0.1,(playerBody.position.y-self.head.position.y)*0.1)
+         #for seg in self.segments:
+              #seg.velocity = seg.velocity*0.9
     
