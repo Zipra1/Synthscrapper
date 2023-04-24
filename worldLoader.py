@@ -9,6 +9,10 @@
 # [> #00aeef (cyan) rectangles are dynamic
 # [> #fff (no fill) means do not load
 # [> 
+
+# Art rules:
+# 640x360
+# Stay somewhat consistent
 import pymunk
 import pyglet
 import os
@@ -113,9 +117,11 @@ def load_world(space,window):
             #image.append([wallTexture,worldStatic[i][0],worldStatic[i][1],worldStatic[i][2],worldStatic[i][3]])
     #return image
     worldTextures = []
-    #for lvl in os.listdir('levels'):
+    for lvl in os.listdir('levelsart/background'):
         #worldTextures.append(pyglet.resource.image('levelsart/'+lvl))
-    background = pyglet.resource.image('levelsart/background/0,0.png')
-    foreground = pyglet.resource.image('levelsart/foreground/0,0.png')
-    worldTextures.append([background,foreground,0,0])
+        Offsetx=int(lvl[0:1])
+        Offsety=int(lvl[2:3])
+        background = pyglet.resource.image('levelsart/background/'+lvl)
+        foreground = pyglet.resource.image('levelsart/foreground/'+lvl)
+        worldTextures.append([background,foreground,Offsetx,Offsety])
     return worldTextures 

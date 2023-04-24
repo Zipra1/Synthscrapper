@@ -1,11 +1,11 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1921.5 1081">
-  <rect x=".5" y="1032.38" width="926.42" height="48.12" style="fill: #231f20; stroke: #231f20; stroke-miterlimit: 10;"/>
-  <rect x="1065.88" y="1032.38" width="854.62" height="48.12" style="fill: #231f20; stroke: #231f20; stroke-miterlimit: 10;"/>
-  <rect x="512.63" y="942.77" width="196.1" height="46.75" style="fill: #231f20; stroke: #231f20; stroke-miterlimit: 10;"/>
-  <rect x="317.82" y="893.42" width="118.18" height="37.66" style="fill: #231f20; stroke: #231f20; stroke-miterlimit: 10;"/>
   <rect x=".5" y=".5" width="1920" height="56.56" style="fill: #fff; stroke: #231f20; stroke-miterlimit: 10;"/>
-  <rect x="1457.19" y="402.53" width="35.95" height="823.57" transform="translate(1287.05 -860.14) rotate(54.69)" style="fill: #231f20; stroke: #231f20; stroke-miterlimit: 10; stroke-width: 1px;"/>
   <rect x="1801.2" y="563.56" width="119.8" height="33.89" style="fill: #231f20; stroke: #231f20; stroke-miterlimit: 10;"/>
-  <rect x="1205.13" y="71.3" width="35.6" height="692.49" transform="translate(2170.58 -461.01) rotate(118.31)" style="fill: #231f20; stroke: #231f20; stroke-miterlimit: 10; stroke-width: 1px;"/>
+  <rect x="1880.64" y="597.45" width="39.86" height="483.05" style="fill: #636466; stroke: #231f20; stroke-miterlimit: 10;"/>
+  <rect x="1677.18" y="438.08" width="36.55" height="349.93" style="fill: #636466; stroke: #231f20; stroke-miterlimit: 10;"/>
+  <rect x="1493.13" y="454.73" width="189.71" height="33.89" transform="translate(-58.68 290.96) rotate(-10.28)" style="fill: #231f20; stroke: #231f20; stroke-miterlimit: 10;"/>
+  <rect x="1485.61" y="442.15" width="8.91" height="33.89" transform="translate(-53.94 676.14) rotate(-25.13)" style="fill: #231f20; stroke: #231f20; stroke-miterlimit: 10;"/>
+  <rect x="1573.63" y="286.88" width="14.4" height="189.71" transform="translate(1061.72 1922.93) rotate(-84.96)" style="fill: #231f20; stroke: #231f20; stroke-miterlimit: 10;"/>
+  <rect x="1471.67" y="425.82" width="26.31" height="8.91" transform="translate(910.15 1865.4) rotate(-84.34)" style="fill: #231f20; stroke: #231f20; stroke-miterlimit: 10;"/>
 </svg>

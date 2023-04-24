@@ -38,9 +38,14 @@ from pymunk.pyglet_util import DrawOptions
 #IDEA: Draw your own map as you go through spaces instead of the game automatically updating it for you. I think this could add a lot to the game. Maybe stickers to customize your map?
 # I think that would just be a really fun idea to implement. Also might be easier than an automatically updating minimap.
 
+#PROLOGUE:
+# We are the only ones left.
+# We do not want to fight.
+# We will die trying.
+
 screens = pyglet.canvas.Display.get_screens
-resolution = [1920,1080]
-window = pyglet.window.Window(resolution[0],resolution[1],"Pymunk Test",fullscreen=True)
+resolution = [1280,720]
+window = pyglet.window.Window(resolution[0],resolution[1],"Pymunk Test",fullscreen=False)
 pyglet.gl.glClearColor(0.2,0.2,0.2,1) # Background colour
 
 options = DrawOptions()
@@ -56,8 +61,8 @@ worldTextures = worldLoader.load_world(space,window) # Load the map in space and
 playerV = player.Player(9,1500,15,150,False,False,False,False,False,False,pyglet.math.Vec2(0,0),0,False,False,False,pyglet.sprite.Sprite(img=pyglet.image.load_animation('Sprites/player/idleR.gif')),False,False)
 playerBody = pymunk.Body(playerV.playerMass,playerV.playerMoment,pymunk.Body.DYNAMIC)
 playerHeadBody = pymunk.Body(2,1000,pymunk.Body.DYNAMIC)
-playerBody.position = 640, 700 # -700
-playerHeadBody.position = 640, 725 # -675
+playerBody.position = 640, -700 # -700
+playerHeadBody.position = 640, -675 # -675
 playerPoly = pymunk.Poly.create_box(playerBody, size=(15,25)) #Attach a box to the body
 playerHead = pymunk.Poly.create_box(playerHeadBody,size=(15,30)) #For crouching, be able to have the head separated.
 joints.rigidJoint(playerBody,playerHeadBody,space,0,25)
@@ -65,27 +70,36 @@ playerPoly.friction = 4
 playerHead.friction = 0
 space.add(playerBody, playerPoly)
 space.add(playerHeadBody,playerHead)
+
+playerEars = pyglet.media.Player
 ###End of world setup
 
 psscreen = menus.pauseScreen(window,playerBody)
 wallImage = pyglet.image.load('Sprites/textures/testWall2.bmp')
 wallTile = pyglet.image.TileableTexture.create_for_image(wallImage)
 
-enemyList = []
-enemyList.append(enemies.Ecenti(space, 20, 300, 300, 1, 0, [3,0], 0, 0.5, [])) # Test enemy
+enemyList = set()
+#enemyList.append(enemies.Ecenti(space, 20, 300, -300, 1, 0, [3,0], 0, 0.5, [])) # Test enemy
 
 spearTest = weapons.Spear(space, 20)
 #spearTest.createSpear(playerBody.position.x-20,playerBody.position.y+5,playerBody)
+#playerPoly.filter = pymunk.ShapeFilter(1)
+#playerHead.filter = pymunk.ShapeFilter(1)
 
-
+fpsDisplay = pyglet.window.FPSDisplay(window=window)
+#fpsDisplay.label.color=(255,255,255,255)
+vignette = pyglet.image.load('Sprites/player/lighting/vignette.png').get_texture() # Vignette
+vignette.width = 1920*2
+vignette.height = 1080*2
+#vignette = pyglet.image.load('vignette.png') # An example lighting texture
 @window.event
 def on_draw(): # Called by pyglet every frame
-    window.clear()
+    #window.clear() # Turns out this actually isn't a requirement, it only makes pure transparency and OpenGL background smear. Sprites and images stay fine, which is all that's being drawn.
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) ## Prevents blurring when upscaling : Magnification filter is set to the "Nearest" algorithim
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST) ## Prevents blurring when downscaling : Minimizing filter is set to the "Nearest" algorithim
     #wallTile.blit_tiled(x=0, y=0, z=0, width=500, height=500) ##I CANT BELIEVE THIS TOOK ME 2 DAYS TO FIGURE OUT OH MY GOD and i DIDNT EVEN USE IT. but alas, such is the way of life.
     #wallImage.blit(50,50)
-    space.debug_draw(options) # Draw collision boxes
+    #space.debug_draw(options) # debug draw, actually stupid?? nothing going on up there? knocks FPS in half, only use when really needed.
     '''if(playerV.pauseButton==True): # An if statement every frame? Possible optimization.
         for elem in psscreen:
                 elem.draw()'''
@@ -104,6 +118,7 @@ def on_draw(): # Called by pyglet every frame
         spear[1].position = (spear[0].position.x,spear[0].position.y,0)
         spear[1].rotation=-spear[0].angle*57.2958
         spear[1].draw()
+        
 
     # ENEMIES
     for enemy in enemyList: # definetly ask mr.park if there's any optimizations to be done here, this is a lot to iterate through. OPTIMIZATION: Use batches! Slightly faster than a for loop: See pyglet docs.
@@ -114,33 +129,48 @@ def on_draw(): # Called by pyglet every frame
         enemy.headSprite.position=(enemy.head.position.x,enemy.head.position.y,0)
         enemy.headSprite.rotation=-enemy.head.angle*57.2958
         enemy.headSprite.draw()
-    
+
+
     for image in worldTextures: #MAP : FOREGROUND
         bg = image[1].get_texture() # Draws all textures everywhere all the time. Possible optimization.
         bg.width = 1280
         bg.height = 720
         glEnable(GL_BLEND)
-        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA)
-        bg.blit(0,-720)
+        glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA) # GL_ONE_MINUS_DST_COLOR for overlay
+        bg.blit(image[2]*1280,(image[3]*720)-720)
 
 
-    #if(playerV.pauseButton==False): # An if statement every frame? Possible optimization.
-    space.step(1/60) # End of draw
+    # LIGHTING
+    glEnable(GL_BLEND)
+    glBlendFunc(GL_DST_COLOR, GL_ZERO)
+    vignette.blit(playerBody.position.x-2000,playerBody.position.y-1100) # Example lighting
+
+
+    # FPS DISPLAY
+    fpsDisplay.label.x = playerBody.position.x -60
+    fpsDisplay.label.y = playerBody.position.y + 70
+    fpsDisplay.draw()
+    #if(playerV.pauseButton==False): # An if statement every frame? Vile. Please fix this.
+    #print(float(fpsDisplay.label.text))
+    space.step(1/60) # Would like if this matched the FPS, figure out how to pull the frametime from the fpsDisplay?
+    #End of draw
+
+
 
 
 @window.event
 def on_key_press(symbol, modifiers):
-    playerV.onkeypress(symbol,modifiers)
+    playerV.onkeypress(symbol,modifiers) # Send the keyboard inputs to the player object
     if(symbol==pyglet.window.key.E): # Throwing and grabbing spears with the same key
         i=-1
         throw = True
-        for spear in spearTest.stuckSpears: ## Check if a spear is within grabbing distance
+        for spear in spearTest.stuckSpears: # Check if a spear is within grabbing distance
             i+=1
             x1 = playerBody.position.x
             x2 = spear.position.x
             y1 = playerBody.position.y
             y2 = spear.position.y
-            if(math.dist([x1,y1],[x2,y2]) < 40):
+            if(math.dist([x1,y1],[x2,y2]) < 40): 
                 throw=False
                 spearTest.grabSpear(spear,spearTest.stuckSpearsPoly[i],spear.constraints)
         if(throw):
@@ -152,22 +182,22 @@ def on_key_release(symbol, modifiers):
 
 @window.event # https://www.youtube.com/watch?v=AR_GB5GoL2k
 def on_mouse_press(x, y, button, modifiers):
-    print('mouse')
-    x=x/2
-    y=y/2
+    print('click')
+    x=x*(1280/resolution[0])
+    y=y*(1280/resolution[0])
     segment_q = space.segment_query_first(playerBody.position,(x,y),1,pymunk.ShapeFilter(1))
     if segment_q:
-        print(segment_q.shape, segment_q.shape.body)
+        #print(segment_q.shape, segment_q.shape.body)
         contact_point = segment_q.point
-        #line = pymunk.Segment(space.static_body, playerBody.position/2,contact_point,1) # For some reason, this is incredibly laggy. Figure that out maybe? Could lead to other optimizations.
-        #line.body.position = playerBody.position/2
+        print(contact_point)
+        #line = pymunk.Segment(space.static_body, playerBody.position,contact_point,1) # For some reason, this is incredibly laggy. Figure that out maybe? Could lead to other optimizations.
         #space.add(line)
+    enemyList.add(enemies.Ecenti(space, 20, x, y-720, 1, 0, [3,0], 0, 0.5, []))
     
 screenZoom = [1280,720] ## May want to make this adjust with monitor for different aspect ratios. Currently only for 16:9 monitors.
 ### ALL BACKGROUNDS MUST BE AT A MULTIPLE OF THIS RESOLUTION!
 #1280x720 is default
 def update(dt):
-    atime=time.time()
     #window.view = window.view.from_rotation(-playerBody.angle/8,pyglet.math.Vec3(0,0,1))
     #window.view = window.view.from_translation(pyglet.math.Vec3(-playerBody.position.x*(resolution[0]/screenZoom[0]) + window.width//2, -playerBody.position.y*(resolution[1]/screenZoom[1]) + window.height//2, 0)) # Change the camera position
     window.view = window.view.from_translation(pyglet.math.Vec3((playerBody.position.x//1280)*(-window.width),-(playerBody.position.y//720)*(window.height),0))
@@ -188,10 +218,7 @@ def update(dt):
     if(playerV.right==True):
         playerV.playerSpeed = -sorted((0, pow(1.015,playerBody.velocity[0]*1.2+(playerV.down*100)), 30))[1]+30
         playerPoly.friction = 0.1
-    
-    #fps=((time.time()-atime))
-    #if(fps>0.016666667):
-    #    ('FT<60FPS!:', fps)
+    #space.step(dt) # Causes slightly choppy because it does not line up perfectly with the frame draw.
     #print(playerBody.position.x//1280,'|',playerBody.position.y//720) # Print map location
     
     
@@ -205,6 +232,7 @@ def limit_velocity(body,gravity,damping,dt): #Pymunk velocity function magic?
         body.velocity = body.velocity * scale
     body.velocity = body.velocity * 0.98 # Constant slight dampen. Does this even actually do anything?
 
+    # POTENTIAL OPTIMIZATION: Use pymunk's layers instead of checking if something should collide
 def coll_begin(arbiter, space, data): # Start collision calculator (All collision functions are pymunk magic)
     if({arbiter.shapes[0]} == playerHeadBody.shapes or {arbiter.shapes[1]} == playerHeadBody.shapes): #If coll is with player head
         if({arbiter.shapes[0]} == playerBody.shapes or {arbiter.shapes[1]} == playerBody.shapes): # If coll is between the player's head and body
@@ -266,11 +294,12 @@ def slowUpdate(dt):
         playerV.down = False
     for hostile in enemyList:
         hostile.act(playerBody)
+    playerEars = pyglet.media.Player.position = playerBody.position
 
-def slowerUpdate(dt):
+'''def slowerUpdate(dt):
     for hostile in enemyList:
         hostile.infoUpdate()
-        hostile.act(playerBody)
+        #hostile.act(playerBody)'''
 
 handler = space.add_default_collision_handler() # Collision handler, to check when objects are colliding.
 handler.begin = coll_begin
@@ -278,16 +307,15 @@ handler.pre_solve = coll_pre
 handler.post_solve = coll_post
 handler.separate = coll_separate
 
-rotLockBody = pymunk.Body(body_type=pymunk.Body.STATIC)
-rotLockBody.position = 0,0
+rotLockBody = pymunk.Body(body_type=pymunk.Body.STATIC) # Stops the player from falling over.
+rotLockBody.position = 0,0 
 rotLock = pymunk.RotaryLimitJoint(playerBody,rotLockBody,0,0)
 rotLock2 = pymunk.RotaryLimitJoint(playerHeadBody,rotLockBody,0,0)
 space.add(rotLock)
 space.add(rotLock2)
 
-
 if __name__ == "__main__":
     pyglet.clock.schedule_interval(update, 1/60) # Call function "update" every 1/60th of a second (60fps)
     pyglet.clock.schedule_interval(slowUpdate, 1/20) # For near-realtime logic
-    pyglet.clock.schedule_interval(slowerUpdate, 1/3) # For non-realtime and expensive logic.
-    pyglet.app.run()
+    #pyglet.clock.schedule_interval(slowerUpdate, 1) # For non-realtime and expensive logic.
+    pyglet.app.run() # Start the game loop

@@ -64,7 +64,7 @@ class Enemy:
         self.head = pymunk.Body(50, 1500, pymunk.Body.DYNAMIC) #Create the head/center of the enemy.
         self.head.position = posx,posy
         #testPolyP = [(0,0),(0,20),(20,20)]
-        headPoly = pymunk.Poly.create_box(self.head,(20,20))
+        headPoly = pymunk.Circle(self.head,12.5)
         headPoly.friction = 3
         #testPoly = pymunk.Poly(testBody,testPolyP)
         space.add(self.head,headPoly)
@@ -95,7 +95,7 @@ class Ecenti(Enemy):
         self.headSprite = pyglet.sprite.Sprite(headImg)
         self.segments = []
 
-        for i in range(12): # Creating segments
+        for i in range(11): # Creating segments
              segment = pymunk.Body(5,1500,pymunk.Body.DYNAMIC)
              segment.position = posx+(25*i)+25,posy
              segmentPoly = pymunk.Circle(segment,12.5)
@@ -110,7 +110,6 @@ class Ecenti(Enemy):
              self.segments.append(segment)
     
     def act(self,playerBody):
-         self.head.velocity = self.head.velocity + pyglet.math.Vec2((playerBody.position.x-self.head.position.x)*0.1,(playerBody.position.y-self.head.position.y)*0.1)
-         #for seg in self.segments:
-              #seg.velocity = seg.velocity*0.9
+         self.head.velocity = self.head.velocity + pyglet.math.Vec2((playerBody.position.x-self.head.position.x)*0.2,(playerBody.position.y-self.head.position.y)*0.2)
+         
     
