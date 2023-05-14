@@ -75,4 +75,4 @@ class Spear: # Tracking spear. Most complicated weapon (tool?) in the game. What
         self.stuckSpears.remove(spear)
         self.stuckSpearsPoly.remove(poly)
         self.stuckSpearsShapes.remove(spear.shapes)
-        self.total.remove([self.spearBody,self.sprite])
+        self.total.remove([spear,self.sprite])
