@@ -3,7 +3,7 @@ import pyglet
 import math
 import random
 import time
-import asyncio
+import astar
 
 class Enemy:
     '''
@@ -67,6 +67,8 @@ class Enemy:
         self.memory = {'lastSeenPlayerPosition':(0,0),'playerPositionConfidence':False,'lastSeenPlayerTime':time.time(),'lastSeenPlayerVelocity':(0,0),'lastSeenPlayerState':'Standing'}
         self.map = []
         self.estimatedPlayerPosition = (0,0)
+        self.randVal = random.randint(-10,10) # Used to spread out the load of the observation function
+        self.nodeMapRes = (48,27) # Width, Height. Per screen.
         
         #Debug variables, comment when done.
         self.debugShapes = []
@@ -149,6 +151,12 @@ class Ecenti(Enemy):
              space.add(jpivot)
              prevSegment = segment
              self.segments.append(segment)
+        self.nodeMap=[]
+        for i in range(self.nodeMapRes[1]):
+             self.nodeMap += [[0]*self.nodeMapRes[0]]
+        #for lne in self.nodeMap:
+             #print(lne)
+                  
     
     def act(self): #20 TPS
         '''Low-cost thinking and movement'''
@@ -163,15 +171,16 @@ class Ecenti(Enemy):
         pass
         #self.estimBody.velocity = (self.memory['lastSeenPlayerVelocity'][0]/1.5*(self.memory['lastSeenPlayerState']),self.memory['lastSeenPlayerVelocity'][1]/1.5)
 
-    async def observe(self,playerPoly,playerHead,playerBody,playerV): #6 TPS
+    def observe(self,playerPoly,playerHead,playerBody,playerV): #6 TPS
         '''Take in surroundings and high-cost thinking
         Executes at 6TPS, but still be careful with optimization. it's still fairly heavy with lots of enemies.
         '''
         # print(self.memory['lastSeenPlayerVelocity'])
-        #testv = 5
-        #for i in range(1000000): # Testing impact
-             #testv+=i
-             #aa = testv
+        '''testv = 5
+        for i in range(1000000): # Testing impact
+             testv+=i
+             aa = testv
+        '''
         self.debugShapes = []
         for i in range(20): # The enemies see in really low resolution raytracing, RTX ON!
             segment_q = self.space.segment_query_first(self.head.position,(self.head.position.x+(math.sin(-self.head.angle-1.571-(i/(10))+1)*1000),self.head.position.y+(math.cos(-self.head.angle-1.571-(i/(10))+1)*1000)),1,pymunk.ShapeFilter(1))
@@ -192,12 +201,29 @@ class Ecenti(Enemy):
                      self.memory['playerPositionConfidence']=0.5 # Move to second best guess
                 elif segment_q[0]==self.estimPolyNG and self.memory['playerPositionConfidence']==0.5:
                      self.memory['playerPositionConfidence']=0 # Dont know where player is
+                else: # At this point, it must be hitting the world. (Check if dynamic object!)
+                     #print('\n',self.nodeMap)
+                     self.nodeMap[int(sorted((0, (contact_point.y+720)//22.5, 24))[1])][int(sorted((0, contact_point.x//22.5, 47))[1])] = 1 ## Clamp this within the map range. Also, calculate the map range in the world loader.
+                     #print(int((contact_point.y+720)))
+                     #print(int(contact_point.x//40))
+                     #print()   sorted((0, contact_point.x//22.5, 720))
+                     #self.nodeMap[5][5] = 1
                 #self.debugCircle.x = contact_point.x
                 #self.debugCircle.y = contact_point.y
                 #self.debugShapes.append(self.debugCircle)
                 self.debugShapes.append(self.estimCircle)
                 self.debugShapes.append(self.estimCircle2)
-                #print(self.memory['lastSeenPlayerState'])
+        start = (-int(self.head.position.y//22.5),int(self.head.position.x//22.5))
+        #if(self.memory['playerPositionConfidence']==1):
+        path = astar.astar(self.nodeMap,start,(int(self.estimBody.position.y//22.5),int(self.estimBody.position.x//22.5)))
+        '''elif(self.memory['playerPositionConfidence']==0.5):
+            path = astar.astar(self.nodeMap,start,(int(-self.estimBodyNG.position.y//22.5),int(self.estimBodyNG.position.x//22.5)))
+        else:
+            path = astar.astar(self.nodeMap,(0,0),(0,0))'''
+        ########################### A* is incredibly laggy in this. Figure out how to do NON-REALTIME code. Timers dont actually do non-realtime. Why not. Aaaa.
+        print(path)
+        print(start,(-int(self.estimBody.position.y//22.5),int(self.estimBody.position.x//22.5)))
+                #print(self.memory['lastSeenPlayerState']
                 #print(contact_point)
          
 

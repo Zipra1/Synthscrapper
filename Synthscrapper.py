@@ -10,7 +10,6 @@ import math
 import weapons
 import time
 import enemies
-import asyncio
 
 from pyglet.gl import *
 #import pathfinding
@@ -20,7 +19,7 @@ from pymunk.pyglet_util import DrawOptions
 
 
 #   Pymunk objects note:
-# Kinematic objects are controlled by code
+# Kinematic objects are controlled by code (Probably wont use)
 # Dyanmic objects are physics controlled (Physics objects)
 # Static bodies don't move (Map)
 
@@ -34,9 +33,10 @@ from pymunk.pyglet_util import DrawOptions
 # FAMINE EVENT
 # At some point, robots attack your town: destroying town food source.
 # You must go out and forage food in the wilderness. Some NPC's may go with you if I can program that.
+# If you have a good relationship with both pro-human robots, they will help and make this very easy.
 # Timed by the day/night cycle, and a meter of NPC's that are starving.
 
-# WRESTLING
+# "WRESTLING"
 # If you can pin down a robot for long enough, you can open the head and kill it like that or talk to it.
 # Talking to it: Threaten it so it makes other enemies leave. This will not change its views on you.
 # OR Spare it and tell it to get out of the area. Changes political views and builds relationship.
@@ -67,7 +67,10 @@ from pymunk.pyglet_util import DrawOptions
 # Exit message:
 #   Are you sure? Unexecuted actions remain. Y/N
 #   Y: Rolling back to present . . . Setting clock speed to: INF
- 
+
+#NOTES
+# Woulda been cool if I could have implemented... literally anything from this list ^^
+
 # SHAPE FILTERS:
 # (1) : For enemies
 # (2) : Player and player head
@@ -125,8 +128,13 @@ vignette = vignette.get_texture()
 vignette.width = 1920*2
 vignette.height = 1080*2
 #vignette = pyglet.image.load('vignette.png') # An example lighting texture
+
+#global tick  # sorry. but it had to be done. its for the sake of the gaming running at a reasonable speed. actually no its not it made things way worse.
+#tick = 0
+
 @window.event
 def on_draw(): # Called by pyglet every frame
+    #global tick # aaaaaaaaaaaaaaaaaaaa
     window.clear() # Turns out this actually isn't a requirement, it only makes pure transparency and OpenGL background smear. Sprites and images stay fine, which is all that's being drawn.
                    # How could disabling this lead to less code being run? Feels like it could be.
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST) ## Prevents blurring when upscaling : Magnification filter is set to the "Nearest" algorithim
@@ -134,9 +142,6 @@ def on_draw(): # Called by pyglet every frame
     #wallTile.blit_tiled(x=0, y=0, z=0, width=500, height=500) ##I CANT BELIEVE THIS TOOK ME 2 DAYS TO FIGURE OUT OH MY GOD and i DIDNT EVEN USE IT. but alas, such is the way of life.
     #wallImage.blit(50,50)
     #space.debug_draw(options) # debug draw, actually stupid?? nothing going on up there? knocks FPS in half, only use when really needed.
-    if(playerV.pauseButton==True): # An if statement every frame? Possible optimization. But 
-        for elem in psscreen:
-                elem.draw()
 
     for image in worldTextures: #MAP : BACKGROUND
         bg = image[0].get_texture() # Draws all textures everywhere all the time. Possible optimization.
@@ -189,31 +194,36 @@ def on_draw(): # Called by pyglet every frame
     if(playerV.pauseButton==False): # An if statement every frame? Vile. Please fix this.
         if(fpsDisplay.label.text):
             #print(float(str(fpsDisplay.label.text)))
-            space.step(1/float(fpsDisplay.label.text)) # Need to make all applied velocities match this, player moves slower at slower FPS even though pymunk is still running "full speed"
+            space.step(1/float(fpsDisplay.label.text)) # Need to make all applied velocities match this, player moves faster at slower FPS even though pymunk is still running "full speed"
+    else:
+        for elem in menus.pauseScreen(window,playerBody):
+            elem.draw()
+
+    '''tick+=1 ## Because pyglet's clocks don't actually help with optimization, there has to be a different way of executing every x seconds for high cost code (like observe)
+    if tick >= 10: # randVal spreads out load over time.
+        tick = 0
+        print(tick)''' # Actually, it's faster to use pyglet clocks. Even though they dont really work? Likely they use threading/multiprocessing. is there truly nothing to be done about this?
     #End of draw
-
-
 
 
 @window.event
 def on_key_press(symbol, modifiers):
     playerV.onkeypress(symbol,modifiers) # Send the keyboard inputs to the player object
     if(symbol==pyglet.window.key.E): # Throwing and grabbing spears with the same key
-        i=-1
-        throw = True
-        for spear in spearTest.stuckSpears: # Check if a spear is within grabbing distance
-            i+=1
-            x1 = playerBody.position.x
-            x2 = spear.position.x
-            y1 = playerBody.position.y
-            y2 = spear.position.y
-            if(math.dist([x1,y1],[x2,y2]) < 40): 
-                throw=False
-                spearTest.grabSpear(spear,spearTest.stuckSpearsPoly[i],spear.constraints)
-        if(throw):
-            spearTest.throwSpear(playerBody.position.x,playerBody.position.y,-playerV.lleft + playerV.lright,randrange(0,20)/400,1300,playerBody)
-    if(playerV.pauseButton):
-        print('Paused')
+        if not playerV.pauseButton:
+            i=-1
+            throw = True
+            for spear in spearTest.stuckSpears: # Check if a spear is within grabbing distance
+                i+=1
+                x1 = playerBody.position.x
+                x2 = spear.position.x
+                y1 = playerBody.position.y
+                y2 = spear.position.y
+                if(math.dist([x1,y1],[x2,y2]) < 40): 
+                    throw=False
+                    spearTest.grabSpear(spear,spearTest.stuckSpearsPoly[i],spear.constraints)
+            if(throw):
+                spearTest.throwSpear(playerBody.position.x,playerBody.position.y,-playerV.lleft + playerV.lright,randrange(0,20)/400,1300,playerBody)
         
 
 @window.event 
@@ -240,6 +250,7 @@ def on_mouse_press(x, y, button, modifiers):
     estims.add(prevEne.estimPoly)
     estims.add(prevEne.estimPolyNG)
 
+
     
 screenZoom = [1280,720] ## May want to make this adjust with monitor for different aspect ratios. Currently only for 16:9 monitors.
 ### ALL BACKGROUNDS MUST BE AT A MULTIPLE OF THIS RESOLUTION!
@@ -257,6 +268,8 @@ def update(dt):
         playerBody.velocity_func = limit_velocity
     # Soft cap movement speed
     playerPoly.friction = 4
+
+    ## Movement
     if(playerV.left==True):
         playerV.playerSpeed = -sorted((0, pow(1.015,-playerBody.velocity[0]*1.2+(playerV.down*100)), 30))[1]+30
         playerPoly.friction = 0.1
@@ -277,7 +290,13 @@ def limit_velocity(body,gravity,damping,dt): #Pymunk velocity function magic?
         body.velocity = body.velocity * scale
     #body.velocity = body.velocity * 0.98 # Constant slight dampen. Does this even actually do anything?
 
-    # POTENTIAL OPTIMIZATION: Use pymunk's layers instead of checking if something should collide # They're not as powerful as expected, but works for some things.
+
+
+
+
+    # POTENTIAL OPTIMIZATION: Use pymunk's layers instead of checking if something should collide
+    # layers are now being used where possible. but they are not as powerful as expected.
+    # there are such things as layer groups. check those out if having collission optimization issues.
 def coll_begin(arbiter, space, data): # Start collision calculator (All collision functions are pymunk magic)
     # Here, could check if should even consider the rest of the collision logic. Same goes for all other collision events. "Is it a spear, player, or enemy?"
     #for ene in enemyList: # This is probably painfully unoptimized. But I don't see any other way to do it. Possible optimization.
@@ -349,15 +368,15 @@ def slowUpdate(dt):
     thread = threading.Thread(target=playerV.animCheck)
     thread.start()
     threads.append(thread)
+    for hostile in enemyList:
+        hostile.act()
+    for hostile in enemyList:
+        hostile.observe(playerPoly,playerHead,playerBody,playerV)
     if(playerV.wantUp and not playerV.inWall):
         playerV.down = False
     if(not playerV.pauseButton):
-        for hostile in enemyList:
-            hostile.act()
         window.view = window.view.from_translation(pyglet.math.Vec3((playerBody.position.x//1280)*(-window.width),-(playerBody.position.y//720)*(window.height),0))
         window.view = window.view.scale(pyglet.math.Vec3(resolution[0]/screenZoom[0],resolution[1]/screenZoom[1],1))
-        for hostile in enemyList:
-            asyncio.run(hostile.observe(playerPoly,playerHead,playerBody,playerV))
     if playerV.down:
         playerHead.filter = pymunk.ShapeFilter(1) # Enemies won't see player head when crouching, allowing for hiding behind smaller walls. makes crouching actually useful
     else:
@@ -367,6 +386,10 @@ def slowUpdate(dt):
 def secClock(dt):
     for thread in threads:
         thread.join()
+    for ene in enemyList:
+        print('\n\n\n\n\nNEWLINE\n\n\n\n')
+        for ln in ene.nodeMap:
+            print(ln)
 
 rotLockBody = pymunk.Body(body_type=pymunk.Body.STATIC) # Stops the player from falling over.
 rotLockBody.position = 0,0 
@@ -379,6 +402,6 @@ space.add(rotLock2)
 ## Soft clocks seem to slightly improve performance.
 pyglet.clock.schedule_interval_soft(update, 1/60) # Call function "update" every 1/60th of a second (60fps)
 pyglet.clock.schedule_interval_soft(slowUpdate, 1/10) # For near-realtime logic
-#pyglet.clock.schedule_interval_soft(slowerUpdate, 1/10) # For non-realtime and expensive logic.
+#pyglet.clock.schedule_interval_soft(slowerUpdate, 1/10) # For non-realtime logic. Op count doesn't matter. of course it doesnt! Aaaa
 pyglet.clock.schedule_interval_soft(secClock, 1.1)
-pyglet.app.run() # Start the game loop
+pyglet.app.run(interval=1/60) # Start the game loop. Max FPS is 60

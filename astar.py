@@ -2,8 +2,8 @@
 '''Source Code (in Python 🐍)
 
 Feel free to use this code in your own projects.'''
-# I'm only using this because the pathfinding library appears to be broken.
-# Pretend this is the "pathfinding" library
+# I'm only using this because the pathfinding library appears to be broken, or the documentation is completely incomprehensible, or i just cant comprehend it.
+# Pretend this is the "pathfinding" library?
 
 
 # Credit for this: Nicholas Swift
@@ -160,7 +160,7 @@ def example(print_maze = True):
             [1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,0,],]
     
     start = (0, 0) # 0,0 is top left
-    end = (2,2) #-y,x
+    end = (7,4) #-y,x
 
     path = astar(maze, start, end)
 
